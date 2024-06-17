@@ -1,4 +1,7 @@
 #!/bin/bash
+
+set -e
+
 # Ensure the files directory is in the correct place
 mkdir -p $HOME/files
 cp -r files/* $HOME/files/
