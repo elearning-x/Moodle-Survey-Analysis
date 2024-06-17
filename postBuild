@@ -7,7 +7,7 @@ mkdir -p $HOME/files
 # cp -r files/* $HOME/files/
 
 # Move the Jupyter config file to the correct location
-mkdir -p $HOME/.jupyter
-cp .jupyter/jupyter_notebook_config.py $HOME/.jupyter/
+# mkdir -p $HOME/.jupyter
+# cp .jupyter/jupyter_notebook_config.py $HOME/.jupyter/
 
 exec "$@"
