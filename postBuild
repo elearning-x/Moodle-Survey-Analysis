@@ -4,7 +4,7 @@ set -e
 
 # Ensure the files directory is in the correct place
 mkdir -p $HOME/files
-cp -r files/* $HOME/files/
+# cp -r files/* $HOME/files/
 
 # Move the Jupyter config file to the correct location
 mkdir -p $HOME/.jupyter
