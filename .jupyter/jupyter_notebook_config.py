@@ -199,7 +199,7 @@ c = get_config()  #noqa
 #          This allows adding javascript/css to be available from the notebook server machine,
 #          or overriding individual files in the IPython
 #  Default: []
-c.ExtensionApp.static_paths = ['/home/jovyan/work/files']
+c.ExtensionApp.static_paths = ['/home/jovyan/files']
 
 ## Url where the static assets for the extension are served.
 #  Default: ''
