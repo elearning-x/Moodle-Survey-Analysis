@@ -18,11 +18,11 @@ from base64 import b64encode
 def on_upload_clicked(change):
     global pdf_file
     uploader.disabled = True
-    pdf_file = tlc.generate_charts(change)
+    pdf_file = tlc.generate_charts2(change)
     out.clear_output()
     with out:
-        # link = f'Click here to download: <a href="{pdf_file}" download="{pdf_file}">{pdf_file}</a>'
-        link = f'Click here to download: <a href="{pdf_file}">{pdf_file}</a>'
+        link = f'Click here to download: <a href="{pdf_file}" download="{pdf_file}">{pdf_file}</a>'
+        #link = f'Click here to download: <a href="{pdf_file}">{pdf_file}</a>'
         display(HTML(link))
     uploader.disabled = False
 

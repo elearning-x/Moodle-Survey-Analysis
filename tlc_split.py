@@ -320,6 +320,7 @@ def QHistoRadar(question, course='') -> None:
     else:
         occurences[question]['imgs'].append(f"{remplacer_caracteres(title)}_hist.svg")
 
+
 def labels_radar(columns: list) -> list:
     labels = []
     for str in columns:
@@ -440,6 +441,7 @@ def Df_Radar(table: pd.DataFrame, q:str ='', course:str =''):
     plt.savefig(f"{remplacer_caracteres(course)}{q}group_radar_charts.svg", format='svg')
     plt.close()
 
+
 def Df_Pie(df:pd.DataFrame, q:str ='', course:str =''):
     # Détermination du nombre de lignes et de colonnes
     num_groups = len(df)
@@ -552,6 +554,58 @@ def create_pdf(pages=[], file_name='output.pdf'):
     doc.build(elements)
 
 
+class PDFBuilder:
+    def __init__(self, file_name='output.pdf'):
+        self.file_name = file_name
+        self.elements = []
+        self.styles = getSampleStyleSheet()
+        self.width, self.height = A4
+
+    def add_image(self, svg_files):       
+        if len(svg_files) > 1:
+            available_height = (self.height - (2 * inch)) / len(svg_files)
+        else:
+            available_height = self.height - (2 * inch)
+
+        available_width = self.width - (2 * inch)
+
+        for idx, svg_file in enumerate(svg_files):
+            drawing = svg2rlg(svg_file)
+            scale_factor = min(available_width / drawing.width, available_height / drawing.height)
+            drawing.width *= scale_factor
+            drawing.height *= scale_factor
+            drawing.scale(scale_factor, scale_factor)
+            self.elements.append(KeepTogether(drawing))
+            if idx < len(svg_files) - 1:
+                self.elements.append(Spacer(1, 12))
+
+            # Supprimer le fichier SVG après utilisation
+            os.remove(svg_file)
+
+        self.elements.append(PageBreak())
+
+    def add_title(self, title):
+        self.elements.append(Paragraph(title, self.styles["Heading1"]))
+
+
+    def add_txt(self, text):
+        for line in text.splitlines(False):
+            self.elements.append(Paragraph(line, self.styles["Normal"]))
+        self.elements.append(PageBreak())
+
+    def build(self):
+        doc = SimpleDocTemplate(self.file_name, pagesize=A4,
+                                bottomMargin=0,
+                                topMargin=.5*inch)
+        doc.build(self.elements)
+
+# Exemple d'utilisation de la classe PDFBuilder
+"""pdf = PDFBuilder('mon_document.pdf')
+pdf.add_title('Page de Titre')
+pdf.add_txt('Introduction', 'Voici un texte d\'introduction pour le document PDF.')
+pdf.add_image('Images SVG', ['image1.svg', 'image2.svg'])
+pdf.build()"""
+
 def generate_charts(change) -> str:
     """
     génère les graphique et retourne le nom de fichier en retour
@@ -575,6 +629,8 @@ def generate_charts(change) -> str:
         if file.endswith(".svg"):
             os.remove( os.path.join( home_files_path, file ) )
         if file.endswith(".png"):
+            os.remove( os.path.join( home_files_path, file ) )
+        if file.endswith(".xlsx"):
             os.remove( os.path.join( home_files_path, file ) )
 
     #if type(change['new']) is dict: # 
@@ -765,6 +821,231 @@ def generate_charts(change) -> str:
 
     # Création du PDF
     create_pdf(pages=pages, file_name=pdf_file_name)
+
+    return pdf_file_name
+
+def generate_charts2(change) -> str:
+    """
+    génère les graphique et retourne le nom de fichier en retour
+    """
+    global df
+    global occurences
+
+    home_files_path = os.path.join(os.environ['HOME'], 'files')
+    # crée le dossier files s'il n'existe pas
+    if not os.path.exists(home_files_path):
+        os.makedirs(home_files_path)
+
+    # on se place dans le dossier files
+    os.chdir(home_files_path)
+
+    # on fait le ménage
+    existing_files = os.listdir(home_files_path)
+    for file in existing_files:
+        if file.endswith(".pdf"):
+            os.remove( os.path.join( home_files_path, file ) )
+        if file.endswith(".svg"):
+            os.remove( os.path.join( home_files_path, file ) )
+        if file.endswith(".png"):
+            os.remove( os.path.join( home_files_path, file ) )
+        if file.endswith(".xlsx"):
+            os.remove( os.path.join( home_files_path, file ) )
+
+    #if type(change['new']) is dict: # 
+    if isinstance(change['new'], dict):
+        infos = change['new']
+        infos = list(infos.values())[0]
+        input_file_name = infos['metadata']['name']
+    # elif type(change['new']) is tuple:
+    elif isinstance(change['new'], tuple):
+        infos = change['new'][0]
+        input_file_name = infos['name']
+
+    _temp = os.path.splitext(input_file_name)
+    pdf_file_name = f"public.{_temp[0]}.pdf"
+
+    content = infos['content']
+    if isinstance(content, memoryview):
+        content = bytes(content)
+    content = io.StringIO(content.decode('utf-8'))
+
+    # détermine la langue
+    try:
+        headers = pd.read_csv(content,
+                              index_col=0,
+                              nrows=0,
+                              encoding='utf-8-sig').columns.tolist()
+        if 'Course' in headers:
+            course_col = 'Course'
+            group_col = 'Group'
+        else:
+            course_col = 'Cours'
+            group_col = 'Groupe'
+    except:
+        raise UserWarning("\nProblem reading the file. Check the name of the .CSV file\nEnter the correct file name in the previous step.\nProblème de lecture du fichier. Vérifier le nom du fichier .CSV\nSaisir le bon nom de fichier à l'étape précédente.")
+
+    # cherche le séparateur
+    content.seek(0)
+    try:
+        dialect = csv.Sniffer().sniff(content.read(1024), [',', ';'])
+    except:
+        raise UserWarning("Problème de lecture du fichier. Vérifier le nom du fichier .CSV\nSaisir le bon nom de fichier à l'étape précédente.")
+
+    # charge le fichier
+    content.seek(0)
+    df = pd.read_csv(content,
+                     encoding='utf-8-sig',
+                     delimiter=dialect.delimiter,
+                     on_bad_lines='skip')
+    # print(df.head())
+
+    if len(df.columns) <= 2:
+        raise UserWarning(f'\nProblem reading the CSV file. Inconsistent number of columns ({df.columns}).\nProblème de lecture du fichier CSV. Nombre de colonnes incohérent ({df.columns})')
+
+    # on supprime les colonnes d'identification (Institution, ID, nom, nom complet)
+    df.drop(df.columns[[2,6,7,8]], axis=1, inplace=True)
+
+    # on extrait les questions que l'on met dans un dictionnaire
+    # questions = [col[:3] for col in df.columns if re.search(r"^Q\d{2}", col)]
+    questions = [re.match(r"^(Q\d*)[_-]", elem).group(1) for elem in df.columns if re.match(r"^(Q\d*)[_-]", elem)]
+
+    # on cherche le nombre de colonne associé à une question
+    occurences = {}
+    for q in questions:
+        if q in occurences:
+            occurences[q]['nb'] += 1
+        else:
+            occurences[q] = {}
+            occurences[q]['nb'] = 1
+
+    # on garde que les questions
+    for col in df.columns:
+        if re.match(r"^(Q\d*)[_-]", col):
+            num_q = re.match(r"^(Q\d*)[_-]", col).group(1)
+            indice_fin = col.find("-")
+            if indice_fin == -1:
+                indice_fin = len(col)
+            occurences[num_q]['title'] = col[len(num_q)+1:indice_fin]
+            if 'column' in occurences[num_q]:
+                occurences[num_q]['column'].append(col)
+            else:
+                occurences[num_q]['column'] = [col]
+
+    # on détermine le type de graphique
+    for element in occurences.keys():
+        if occurences[f"{element}"]['nb'] == 1:
+            name = occurences[f"{element}"]['column'][0]
+
+            if df.dtypes[name] == 'O':
+                match = df[df[name].str.match(r"^[0-9]* :.*$") == True]
+            else:
+                # la colonne est numérique
+                match = [1]
+
+            if len(match) > 0:
+                occurences[element]['type'] = 'pie'
+            else:
+                occurences[element]['type'] = 'comments'
+        elif occurences[f"{element}"]['nb'] == 2:
+            occurences[element]['type'] = 'bar'
+        else:
+            occurences[element]['type'] = 'radar'
+
+
+    # Génération de la liste des cours triée alphabétiquement
+    names = np.sort(df[course_col].unique())
+
+    # -- Analyse des réponses pour l'echelle des radars --
+    # Recherche de la position de la 1ere colonne de réponse
+    Q01_index = df.columns.get_loc(occurences[list(occurences.keys())[0]]['column'][0])
+    # Recherche la valeur max de toutes les valeurs max
+    global max_scale
+    max_scale = df.iloc[:,Q01_index:].max(axis=1, numeric_only=True).values.max()
+
+    # Génère des DF pour chaque cours
+    s_df = []
+    for name in names:
+        condition = df[course_col] == name
+        filtered_rows = df.index[condition].tolist()
+        s_df.append(df.loc[filtered_rows])
+
+        # export fichier Excel
+        with pd.ExcelWriter(f"{name}.xlsx", engine='xlsxwriter') as writer:
+            df.loc[filtered_rows].to_excel(writer,sheet_name = 'Survey', index=False)
+
+    # Préparation des pages du PDF
+    pdf = PDFBuilder(pdf_file_name)
+
+    # on parcours les sous DF
+    for idx, df in enumerate(s_df):
+        # Génération de DF  par groupes
+        sg_s_df = []
+
+        groups = np.sort(df[group_col].unique())
+        for group in groups:
+            condition = df[group_col] == group
+            filtered_rows = df.index[condition].tolist()
+            sg_s_df.append(df.loc[filtered_rows])
+
+        # on crée le graphique pour chaque question
+        for q in occurences:
+            if occurences[q]['type'] == 'pie':
+               # vérfie que la colonne ne soit pas vide
+                if df[occurences[q]['column'][0]].isna().all().all() != True:
+                    # on dessine un pie pour le cours entier
+                    QPie(q, 9, course=names[idx])
+                    # on enregistre les informations pour la page pdf
+                    pdf.add_title(f"{names[idx]}, {q}: {occurences[q]['title']}")
+                    pdf.add_image(occurences[q].get('imgs'))
+                # subplots par groupe
+                result = df.groupby(group_col)[occurences[q]['column'][0]].value_counts().unstack(fill_value=0)
+                if result.isna().all().all() != True:
+                    Df_Pie(result, q=q, course=names[idx])
+                    pdf.add_title(f"{names[idx]} (groups), {q}: {occurences[q]['title']}")
+                    pdf.add_image([f"{q}{names[idx]}group_pie_charts.svg"])
+            
+            elif occurences[q]['type'] == 'bar':
+                Plot_bar(q, 9, course=names[idx])
+                # on enregistre les informations pour la page pdf
+                pdf.add_title(f"{names[idx]}, {q}: {occurences[q]['title']}")
+                pdf.add_image(occurences[q].get('imgs'))
+
+
+            elif occurences[q]['type'] == 'radar':
+                # vérfie que le tableau ne soit pas composé de valeurs vides
+                if df[occurences[q]['column']].isna().all().all() != True:
+                    #Crée le radar
+                    QRadar(question=q, course=names[idx])
+                    # Ajout de l'histogramme des réponses
+                    QHistoRadar(question=q, course=names[idx])
+                    # on enregistre les informations pour la page pdf
+                    pdf.add_title(f"{names[idx]}, {q}: {occurences[q]['title']}")
+                    pdf.add_image(occurences[q].get('imgs'))
+
+                # Sub plot par groupe
+                table = pd.pivot_table(df, values=occurences[q]['column'], index=group_col)
+                if table.isna().all().all() != True:
+                    Df_Radar(table=table, q=q, course=names[idx])
+                    pdf.add_title(f"{names[idx]} (groups), {q}: {occurences[q]['title']}")
+                    pdf.add_image([f"{q}{names[idx]}group_radar_charts.svg"])
+
+            elif occurences[q].get('type') == 'comments':
+                # on ajoute les commentaires pour le PDF
+                comments = df[occurences[q]['column']].dropna()
+                paragraph = ''
+                for comment in comments.values:
+                    if len(comment[0].strip()) > 0:
+                        paragraph += f"{comment[0].strip()}\n"
+                
+                # on enregistre les informations pour la page pdf 
+                if len(paragraph.split('\n')) >=2:
+                    pdf.add_title(f"{names[idx]}, {q}: {occurences[q]['title']}")
+                    pdf.add_txt(paragraph)
+
+
+    # Création du PDF
+    # create_pdf(pages=pages, file_name=pdf_file_name)
+    pdf.build()
 
     return pdf_file_name
 
