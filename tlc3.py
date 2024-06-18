@@ -175,7 +175,7 @@ def QRadar(question) -> None:
     q = question
     # remplace les -999 par NaN
     # print(occurences[q])
-    df[occurences[q]['column']] = df[occurences[q]['column']].replace(-999.0, np.NaN)
+    df[occurences[q]['column']] = df[occurences[q]['column']].replace(-999.0, np.nan)
 
     categories = labels_radar(occurences[q]['column'])
     values = df[occurences[q]['column']].mean().tolist()
@@ -236,7 +236,7 @@ def QRadar(question) -> None:
 def QHistoRadar(question) -> None: 
     q=question
     # remplace les -999 par NaN
-    df[occurences[q]['column']] = df[occurences[q]['column']].replace(-999.0, np.NaN)
+    df[occurences[q]['column']] = df[occurences[q]['column']].replace(-999.0, np.nan)
 
     title = occurences[q]['title']
     if title == '':
@@ -354,7 +354,7 @@ def remplacer_caracteres(chaine) -> str:
 
 
 def Plot_bar(question, maxpage):
-    df[occurences[question]['column']].replace(-999.0, np.NaN, inplace=True)
+    df[occurences[question]['column']].replace(-999.0, np.nan, inplace=True)
     categories = labels_radar(occurences[question]['column'])
     values = df[occurences[question]['column']].mean().tolist()
 
@@ -447,10 +447,8 @@ def generate_charts(change) -> str:
     """
     global df
     global occurences
-
     
     home_files_path = os.path.abspath("files")
-    print(home_files_path)
     # crée le dossier files s'il n'existe pas
     if not os.path.exists(home_files_path):
         os.makedirs(home_files_path)

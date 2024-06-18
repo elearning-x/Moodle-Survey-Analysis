@@ -175,7 +175,7 @@ def QRadar(question, course='') -> None:
     q = question
     # remplace les -999 par NaN
     # print(occurences[q])
-    df[occurences[q]['column']] = df[occurences[q]['column']].replace(-999.0, np.NaN)
+    df[occurences[q]['column']] = df[occurences[q]['column']].replace(-999.0, np.nan)
 
     # vérfie que le tableau ne soit pas composé de valeurs vides
     if df[occurences[q]['column']].isna().all().all() == True:
@@ -237,7 +237,7 @@ def QRadar(question, course='') -> None:
 def QHistoRadar(question, course='') -> None: 
     q=question
     # remplace les -999 par NaN
-    df[occurences[q]['column']] = df[occurences[q]['column']].replace(-999.0, np.NaN)
+    df[occurences[q]['column']] = df[occurences[q]['column']].replace(-999.0, np.nan)
 
     title = f"{course}-{occurences[question].get('title')}"
     # calcul du nb de ligne
@@ -354,7 +354,7 @@ def remplacer_caracteres(chaine) -> str:
 def Plot_bar(question, maxpage, course=''):
     title = f"{course}-{occurences[question].get('title')}"
     # df[occurences[question]['column']].replace(-999.0, np.NaN, inplace=True)
-    df.loc[:, occurences[question]['column']] = df.loc[:, occurences[question]['column']].replace(-999.0, np.NaN)
+    df.loc[:, occurences[question]['column']] = df.loc[:, occurences[question]['column']].replace(-999.0, np.nan)
     categories = labels_radar(occurences[question]['column'])
     values = df[occurences[question]['column']].mean().tolist()
 
@@ -559,6 +559,24 @@ def generate_charts(change) -> str:
     global df
     global occurences
 
+    home_files_path = os.path.abspath("files")
+    # crée le dossier files s'il n'existe pas
+    if not os.path.exists(home_files_path):
+        os.makedirs(home_files_path)
+
+    # on se place dans le dossier files
+    os.chdir(home_files_path)
+
+    # on fait le ménage
+    existing_files = os.listdir(home_files_path)
+    for file in existing_files:
+        if file.endswith(".pdf"):
+            os.remove( os.path.join( home_files_path, file ) )
+        if file.endswith(".svg"):
+            os.remove( os.path.join( home_files_path, file ) )
+        if file.endswith(".png"):
+            os.remove( os.path.join( home_files_path, file ) )
+            
     #if type(change['new']) is dict: # 
     if isinstance(change['new'], dict):
         infos = change['new']
