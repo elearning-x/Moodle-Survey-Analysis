@@ -695,7 +695,10 @@ def generate_charts(change) -> str:
         filtered_rows = df.index[condition].tolist()
         s_df.append(df.loc[filtered_rows])
 
-    # print(occurences)
+        # export fichier Excel
+        with pd.ExcelWriter(f"{name}.xlsx", engine='xlsxwriter') as writer:
+            df.loc[filtered_rows].to_excel(writer,sheet_name = 'Survey', index=False)
+
     # Préparation des pages du PDF
     pages =[]
 

@@ -20,11 +20,12 @@ def on_upload_clicked(change):
     global pdf_file
     uploader.disabled = True
     pdf_file = tlc.generate_charts(change)
+    out.clear_output()
     with out:
         link = f'<a href="{pdf_file}" download="{pdf_file}">Click here to download: {pdf_file}</a>'
         display(HTML(link))        
     uploader.disabled = False
-       
+
 
 pdf_file = ''
 
