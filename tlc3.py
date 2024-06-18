@@ -135,7 +135,8 @@ def MultiPie(mydf: pd, mytitle) -> plt:
               '#C634AF']
     for ax, (title, values) in zip(axs.flat, mydf.items()):
 
-        ax.pie(values, labels=labels_radar([k[0] for k, v in mydf.iterrows()]),
+        # ax.pie(values, labels=labels_radar([k[0] for k, v in mydf.iterrows()]),
+        ax.pie(values, labels=[k[0] for k, v in mydf.iterrows()],
                autopct=lambda p: f"{p:.2f}%\n({(p * sum(values)/100):,.0f})" if p > 0 else '',
                wedgeprops={'linewidth': 1, 'edgecolor': 'white'},
                textprops={'color': "#8E8E90", 'weight': 'bold',
