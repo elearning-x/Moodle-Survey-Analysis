@@ -180,6 +180,8 @@ def QRadar(question) -> None:
     categories = labels_radar(occurences[q]['column'])
     values = df[occurences[q]['column']].mean().tolist()
     title = occurences[question].get('title')
+    if title == '':
+        title = question
         
     N = len(categories)
 
@@ -237,6 +239,9 @@ def QHistoRadar(question) -> None:
     df[occurences[q]['column']] = df[occurences[q]['column']].replace(-999.0, np.NaN)
 
     title = occurences[q]['title']
+    if title == '':
+        title = question
+
     # calcul du nb de ligne
     nb_q = len(occurences[q]['column'])
 
@@ -444,13 +449,24 @@ def generate_charts(change) -> str:
     global occurences
 
     
-    home_files_path = os.path.join(os.environ['HOME'], 'files')
+    home_files_path = os.path.abspath("files")
+    print(home_files_path)
     # crée le dossier files s'il n'existe pas
     if not os.path.exists(home_files_path):
         os.makedirs(home_files_path)
 
     # on se place dans le dossier files
     os.chdir(home_files_path)
+
+    # on fait le ménage
+    existing_files = os.listdir(home_files_path)
+    for file in existing_files:
+        if file.endswith(".pdf"):
+            os.remove( os.path.join( home_files_path, file ) )
+        if file.endswith(".svg"):
+            os.remove( os.path.join( home_files_path, file ) )
+        if file.endswith(".png"):
+            os.remove( os.path.join( home_files_path, file ) )
 
     #if type(change['new']) is dict: # 
     if isinstance(change['new'], dict):
