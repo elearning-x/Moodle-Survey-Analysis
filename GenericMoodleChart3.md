@@ -20,39 +20,11 @@ def on_upload_clicked(change):
     global pdf_file
     uploader.disabled = True
     pdf_file = tlc.generate_charts(change)
-    btn.description = f"Generate link to {pdf_file}"
     with out:
-        display(FileLink(f"{pdf_file}", result_html_prefix="Click here to download: "))
-        # display(btn)
-        # IFrame(pdf_file, width=900, height=550)
+        link = f'<a href="{pdf_file}" download="{pdf_file}">Click here to download: {pdf_file}</a>'
+        display(HTML(link))        
     uploader.disabled = False
-
-def download_data(e=None):
-    #ici lire le fichier pdf à envoyer en premier parametre
-    with open(pdf_file, 'rb') as f:
-        data = b64encode(f.read())
-      
-    with out:
-        display(FileLink(pdf_file, result_html_prefix="Click here to download: "))
-        # trigger_download(data, pdf_file, kind='application/pdf')
-        
-
-def trigger_download(data, filename, kind='text/json'):
-    # see https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs for details
-    #content_b64 = b64encode(data.encode()).decode()
-    data_url = f'data:{kind};charset=utf-8;base64,{data}'
-    js_code = f"""
-        var a = document.createElement('a');
-        a.setAttribute('download', '{filename}');
-        a.setAttribute('href', '/notebooks/{data_url}');
-        a.innerHTML = 'Télécharger le fichier PDF';
-        a.click();
-    """
-    with out:
-        # display(FileLink(pdf_file, result_html_prefix="Click here to download: "))
-        display(HTML(f'<script>{js_code}</script>'))
-        display(HTML(f'Coucou'))
-
+       
 
 pdf_file = ''
 
@@ -67,11 +39,6 @@ uploader.observe(on_upload_clicked, names='value')
 
 display(ipw.HBox([uploader])) 
 out = ipw.Output()
-btn = Button(description=f'Download {pdf_file}', layout=ipw.Layout(width="300px"))
-btn.on_click(download_data)
 display(out)
-
-```
-```python
 
 ```
