@@ -10,4 +10,6 @@ mkdir -p $HOME/files
 # mkdir -p $HOME/.jupyter
 # cp .jupyter/jupyter_notebook_config.py $HOME/.jupyter/
 
+jupytext-config set-default-viewer
+
 exec "$@"
