@@ -9,3 +9,4 @@ svglib
 jupytext
 jupyterlab-myst
 xlsxwriter
+XlsxWriter
