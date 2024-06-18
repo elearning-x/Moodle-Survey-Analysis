@@ -1,0 +1,10 @@
+numpy>=1.14.5
+pandas
+matplotlib
+openpyxl
+pygal
+voila
+reportlab
+svglib
+jupytext
+jupyterlab-myst
