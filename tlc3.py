@@ -448,7 +448,8 @@ def generate_charts(change) -> str:
     global df
     global occurences
     
-    home_files_path = os.path.abspath("files")
+    home_files_path = os.path.join(os.environ['HOME'], 'files')
+    
     # crée le dossier files s'il n'existe pas
     if not os.path.exists(home_files_path):
         os.makedirs(home_files_path)
